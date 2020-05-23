@@ -1,0 +1,99 @@
+java 学习日志
+第零部分: 学习过程中遇到的坑
+1、idea打包
+	.1: spring-boot-maven-plugin(打可执行jar包)和maven-compilre-plugin的区别
+	.2：打包使用的jdk，优先读取setting.xml(此文件可以改目录，不能改名称)中的profile配置；没有读取JAVA_HOME的配置
+	.3: 多模块工程构建，子模块全部指定parent为父模块，父模块指定module为子模块；子模块间依赖通过dependency
+		 父模块打包为pom，子模块打包为jar，只有需要启动类的子模块可以指定spring-boot-maven-plugin打可执行jar包
+		 启动类默认扫描当前包和子包的注解，如果需要扫描其他模块注解需要指定
+
+第一部分： 已经完成学习
+1、缓存中间件-redis
+	.1: 注解开发和通过redisTemplate开发
+	.2: 注解开发和redisTemplate都指定String的序列化方式
+	.3: 注解开发(@enableCache(检查后写缓存)、@enablePut(不检查注解写缓存)、@enableEvict(删除缓存))
+	.4: 缓存和数据库的顺序：
+		读取:先读缓存，没有读数据库，并写缓存
+		更新:先删除缓存、然后更新数据库、然后写缓存
+		写入:先写数据库、然后写缓存；高并发先写缓存，然后通过异步任务写数据库
+2、spring-cloud服务注册和发现-eureka
+	.1: 配置eureka注册中心，各微服务注册到注册中心上
+3、spring-cloud接口调用-feign和熔断器
+	.1：被调用的接口抽出接口层，封装为jar包供各个微服务调用
+	.2：指定feign接口调用连接超时时长
+	.3: 指定熔断方法(实现feign接口)，当接口调用超时通过熔断方法返回
+4、TCC控制分布式事务，hmily框架
+	.1：@hmily注解
+	.2：各微服务需要实现try-confirm-cancel，三个方法
+	.3：各方法中需要实现接口幂等校验，try中需要处理try悬挂，cancle中需要处理空回滚
+	.4: 以上异常情况通过将全局事务id写入日志表，进行判断
+5、ioc和aop
+	ico，控制反转(bean用容器注入使用的地方)，依赖注入
+	aop，在指定的方法T前后调用公共的方法B，通过动态代理生成的代理对象调用指定的方法T
+	aop必须满足：1、切面类必须被spring扫描到，
+				 2、被切的对象实例必须通过spring容器生成(因为从spring取出实例对象的时候会判断切面是否存在)
+				    第二点表明，设置了切面的方法必须是通过spring中bean产生的实例对象直接调用，如果通过this调用切面无效
+	动态代理，jdk的动态代理(被代理对象必须定义接口)，cblib的动态代理(通过修改class的字节码生成子类)
+		jdk动态代理，Proxy
+		cglib的动态代理，
+	静态代理，代理对象的代码在代码运行前生成
+6、基于mq的分布式事务
+	.1: 发消息和接受消息写消息记录表，供后面重试和接口幂等校验使用
+	.2: 如果B失败，则通过定时任务扫描失败的事务，重试B；多次重试后无法恢复，则对A和C进行回滚；保证最中A、B、C三方数据的一致
+
+第二部分： 准备学习
+1、通过mq(kafka)实现最终一致性的分布式事务
+	.1: zookeeper+kafka+kafdrop安装
+	.2: cmd启动zookeeper + kafka
+	    cd C:\Users\hulei\Documents\zookeeper kafka\zookeeper\zookeeper-3.4.14 (1)\zookeeper-3.4.14\bin
+        zkServer
+        cd C:\Users\hulei\Documents\kafka2.4  
+        .\bin\windows\kafka-server-start.bat .\config\server.properties
+	.3: web页面访问kafka，执行kafdrp的可执行jar包，然后访问 localhost:9000
+	.4: kafka基本概念：
+		provider：发消息方
+		consumer：消费消息方
+		broker：消息服务器
+		topic：消费者监听一个或者多个topic
+		partitial和segment：partitial是对topic的水平扩展
+		offset：消费者当前消费的消息在分区的位置
+		consumer-group：消费组，一个应用设置一个消费组，不同消费组可以消费同一个topic
+		poll：消费者执行kafka服务器和topic信息后，通过无限循环拉取没有被消费的消息
+		commit: 消费者poll到消息后将消费位移提交给mq服务器
+2、工厂模式的学习和使用场景
+	.1: 简单工厂模式、工厂方法模式和抽象工厂模式
+	.2: 使用场景，解耦：将对象的创建和使用解耦，通过工厂定义统一的接口去创建对象
+3、代理模式的学习和使用场景
+4、单例模式的学习和使用场景
+	.1: 延迟加载的单例模式，使用场景：缓存数据
+5、多线程的应用场景
+	.1、将多个慢的同步操作优化为异步操作
+	.2、new Thread(对象).start();对象需要实现runable方法，或者继承Thread类，都是为了实现run方法
+	.3、线程池
+
+第三部分： 后续准备学习
+1、spring切面的使用和动态代理的使用
+2、spring的监听器
+3、java的callback 和future
+4、es查询
+5、mongodb
+6、高并发和多线程以及线程安全
+	.1: 多线程是解决高并发的一个手段，高并发的场景：抢票、商城秒杀
+	.2: 多线程的使用和线程池的使用
+	.3: 并发读，通过缓存解决；
+		并发写，并发写需要加锁，避免脏数据产生
+			单服务器：通过对像锁解决，共享资源的修改增加sychronize
+			分布式：通过分布式锁，例如数据库锁，redis锁，zookeeper	
+				数据库锁：乐观锁和悲观锁
+					乐观锁，适用于冲突少场景，因为加锁时间靠后，失败成本高。读的时候读出版本号A；写的时候，判断条件加上版本号A，并同时修改版本号为B
+					悲观锁，使用于冲突多的场景， 加锁时间靠前，失败成本低。selec for update，在查询的时候锁定数据，避免被其他事务修改
+				redis锁：
+					setnx加锁，如果set成功表示唯一获取，此时可以后续操作，执行后解锁（删除set的值）
+					redis集群的分布式锁，redlock
+				zookeeper；
+					需要加锁的时候，去zookeeper上指定目录下生成一个递增的有序节点，
+					然后判断这个节点是不是所有节点中序号最小的，如果不是监听比自己小的节点什么时候删除，知道自己被删除
+7、分库分表和读写分离
+8、memcached
+9、nginx实现服务器的负载均衡
+10、集合、map的数据结构原理，以及排序
