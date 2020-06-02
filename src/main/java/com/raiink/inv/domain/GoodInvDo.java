@@ -38,18 +38,23 @@ public class GoodInvDo extends BaseInfoDo {
   private String id;
 
   @Column(columnDefinition = "varchar(50) not null default 'S000' comment '生产商编码'")
+  @ApiModelProperty(example = "F0001")
   private String factoryCode;
 
   @Column(columnDefinition = "varchar(32) unique comment'商品编码'")
+  @ApiModelProperty(example = "C0001")
   private String goodNo;
 
   @Column(columnDefinition = "varchar(100) not null comment '商品名称'")
+  @ApiModelProperty(example = "泸溪河肉松小贝")
   private String goodName;
 
   @Column(columnDefinition = "int default 0 comment '库存数量'")
+  @ApiModelProperty(example = "100")
   private Integer goodCount;
 
   @Column(columnDefinition = "int default 0 comment '冻结库存数量'")
+  @ApiModelProperty(example = "0")
   private Integer goodFrozenCount;
 
   @ApiModelProperty(hidden = true)
@@ -57,9 +62,11 @@ public class GoodInvDo extends BaseInfoDo {
   private String unit;
 
   @Column(columnDefinition = "double default 0 comment '商品进价'")
+  @ApiModelProperty(example = "20")
   private Double goodInitPrice;
 
   @Column(columnDefinition = "double default 0 comment '商品出售价格'")
+  @ApiModelProperty(example = "30")
   private Double goodSalePrice;
 
   @ApiModelProperty(hidden = true)

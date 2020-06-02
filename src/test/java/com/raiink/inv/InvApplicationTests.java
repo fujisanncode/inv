@@ -1,10 +1,6 @@
 package com.raiink.inv;
 
-import com.raiink.inv.aspect.CglibProxyUser;
-import com.raiink.inv.aspect.IUser;
-import com.raiink.inv.aspect.JdkProxyHandler;
-import com.raiink.inv.aspect.StaticProxyUser;
-import com.raiink.inv.aspect.User;
+import com.raiink.inv.aspect.*;
 import com.raiink.inv.factory.AudiFactory;
 import com.raiink.inv.factory.Car;
 import com.raiink.inv.factory.InterfaceCarFactory;
@@ -16,16 +12,20 @@ import com.raiink.inv.service.lock.LockFactoryMonomer;
 import com.raiink.inv.service.lock.model.GetLock;
 import com.raiink.inv.service.lock.model.ReleaseLock;
 import com.raiink.inv.service.thread.TrunkShipment;
+import com.raiink.inv.service.thread.TrunkShipmentSfThread;
 import com.raiink.inv.service.thread.TrunkShipmentSingleThread;
-import java.lang.reflect.Proxy;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.StopWatch;
+
+import java.lang.reflect.Proxy;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Slf4j
 // @SpringBootTest // 不需要测试spring依赖的时候注释掉
@@ -124,17 +124,23 @@ class InvApplicationTests {
     tmp2.start();
   }
 
+  @Test
   // 通过多线程，并行io时间长的步骤，减少整体执行时长
-  public void testThreadCase() throws InterruptedException {
+  public void testThreadCase() throws InterruptedException, ExecutionException {
     StopWatch stopwatch = new StopWatch("testThreadCase");
     stopwatch.start("single thread trunk");
     TrunkShipment singleThread = new TrunkShipmentSingleThread();
-    singleThread.getSfFreight();
-    singleThread.getOrderInfo();
+    String sfSingle = singleThread.getSfFreight();
+    String orderSingle = singleThread.getOrderInfo();
+    log.info("single sf:{}, order:{}", sfSingle, orderSingle);
     stopwatch.stop();
     stopwatch.start("multi thread trunk");
+    // 建立线程池
     ExecutorService executorService = Executors.newFixedThreadPool(2);
-    singleThread.getOrderInfo();
+    Future<String> future = executorService.submit(new TrunkShipmentSfThread()); // 起异步任务
+    String orderMulti = singleThread.getOrderInfo();
+    String sfMulti = future.get(); // 通过future获取异步任务返回结果，此方法为同步方法(即阻塞主线程)
+    log.info("multi sf:{}, order:{}", sfMulti, orderMulti);
     stopwatch.stop();
   }
 }

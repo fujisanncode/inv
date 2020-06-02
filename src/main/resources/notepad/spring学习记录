@@ -9,6 +9,10 @@ java 学习日志
 
 第一部分： 已经完成学习
 1、缓存中间件-redis
+    .0: 安装redis
+        安装Redis-x64-3.2.100.msi
+        修改redis.windows-service.conf 解开注释requirepass
+        windows服务，redis，重启服务
 	.1: 注解开发和通过redisTemplate开发
 	.2: 注解开发和redisTemplate都指定String的序列化方式
 	.3: 注解开发(@enableCache(检查后写缓存)、@enablePut(不检查注解写缓存)、@enableEvict(删除缓存))
@@ -47,7 +51,7 @@ java 学习日志
 	.2: cmd启动zookeeper + kafka
 	    cd C:\Users\hulei\Documents\zookeeper kafka\zookeeper\zookeeper-3.4.14 (1)\zookeeper-3.4.14\bin
         zkServer
-        cd C:\Users\hulei\Documents\kafka2.4  
+        cd C:\Users\hulei\Documents\kafka2.4
         .\bin\windows\kafka-server-start.bat .\config\server.properties
 	.3: web页面访问kafka，执行kafdrp的可执行jar包，然后访问 localhost:9000
 	.4: kafka基本概念：
